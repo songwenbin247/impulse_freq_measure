@@ -5,26 +5,22 @@
 #include "sys_51.h"
 #include "config.h"
 
-#define PIN_4 
-#define PIN_5
-#define PIN_6
-#define PIN_D_0_7
 
 #define D_REG 0x01
 #define C_REG 0x00
-#define RS(arg)  PIN_4 = (bit)arg 
+#define RS(arg)  1602_PIN_4 = (bit)arg 
 
 #define R_SELE 0x01
 #define W_SELE 0x00
-#define RW(arg) PIN_5 =(bit)arg
+#define RW(arg) 1602_PIN_5 =(bit)arg
 
 #define M_L 0x00
 #define M_H 0x01
-#define EN(arg)   PIN_6 = (bit)arg
+#define EN(arg)   1602_PIN_6 = (bit)arg
 
 
-#define GDATA() (PIN_D_0_7) 
-#define SDATA(dat) PIN_D_0_7 = (dat)
+#define GDATA() (1602_PIN_D) 
+#define SDATA(dat) 1602_PIN_D = (dat)
 
 #define COMM_CLEAR()   \
 	write_cmd(0x01)
