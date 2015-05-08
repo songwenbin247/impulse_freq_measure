@@ -2,8 +2,8 @@
 #define __DEVICE_1602_H__
 
 #include "reg52.h"
-#include "config_1602.h"
-
+#include "sys_51.h"
+#include "config.h"
 
 #define PIN_4 
 #define PIN_5
@@ -73,21 +73,21 @@
 			_nop_();\
 			_nop_()
 
-void delay(unsigned char ms);
-unsigned char is_busy();
-void write_cmd(unsigned char cmd);
-void set_pos(unsigned char pos);
-void write_dat(unsigned char dat);
-void dispstr(unsigned char *s);
+void delay(u8 ms);
+u8 is_busy();
+void write_cmd(u8 cmd);
+void set_pos(u8 pos);
+void write_dat(u8 dat);
+void dispstr(u8 *s);
 #define dispch(ch)  write_dat(ch)
-void init_1602(unsigned char sys_bus_wide,
-		  unsigned char sys_line,
-		  unsigned char sys_pixels,
-		  unsigned char disp_screen_sw,
-		  unsigned char disp_curos_sw,
-		  unsigned char disp_curos_glitter_sw,
-		  unsigned char shift_curos_way,
-		  unsigned char shift_char_way
+void init_1602(u8 sys_bus_wide,
+		  u8 sys_line,
+		  u8 sys_pixels,
+		  u8 disp_screen_sw,
+		  u8 disp_curos_sw,
+		  u8 disp_curos_glitter_sw,
+		  u8 shift_curos_way,
+		  u8 shift_char_way
 		);
 
 #endif
