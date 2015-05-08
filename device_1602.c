@@ -81,7 +81,7 @@ void write_dat(unsigned char dat)
 //       SHIFT_WITH_SUROS 
 //       SHIFT_NOWITH_SUROS 
 /***********************************/
-void init(unsigned char sys_bus_wide,
+void init_1602(unsigned char sys_bus_wide,
 		  unsigned char sys_line,
 		  unsigned char sys_pixels,
 		  unsigned char disp_screen_sw,

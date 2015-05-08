@@ -79,8 +79,8 @@ void write_cmd(unsigned char cmd);
 void set_pos(unsigned char pos);
 void write_dat(unsigned char dat);
 void dispstr(unsigned char *s);
-#define dispc(ch)  write_dat(ch)
-void init(unsigned char sys_bus_wide,
+#define dispch(ch)  write_dat(ch)
+void init_1602(unsigned char sys_bus_wide,
 		  unsigned char sys_line,
 		  unsigned char sys_pixels,
 		  unsigned char disp_screen_sw,
