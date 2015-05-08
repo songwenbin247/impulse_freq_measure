@@ -4,18 +4,6 @@
 #include "sys_51.h"
 
 
-void delay(u8 ms)
-{
-	u8 i;
-	while(ms--){
-		for(i = 0; i < 250; i++ ){
-			_nop_();
-			_nop_();
-			_nop_();
-			_nop_();
-		}
-	}
-}
 
 u8 is_busy()
 {
