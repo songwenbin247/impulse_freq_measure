@@ -22,3 +22,27 @@ void delays(u8 s)
 	}
 }
 
+#define EA (0x01 << 7)
+#define 
+
+
+
+
+void sys_init()
+{
+	PCON2 = 0x00;
+
+}
+
+void time_irq_init()
+{
+	EA = 1;
+	ET1 = 1;
+	ET2 = 1;
+}
+void time0_init()
+{
+	
+}
+
+	

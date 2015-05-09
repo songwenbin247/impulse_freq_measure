@@ -1,6 +1,6 @@
 #include "device_1602.h"
 #include "sys_51.h"
-
+#include "disp.h"
 //           ******************   
 //           *S:R  | G:0      *         
 //           *R:238674Hz      *
@@ -31,6 +31,16 @@ static void disp_painting()
 }
 u8 boot_str[] = "Welcome...";
 
+struct disp_info
+{
+	u8   S;
+	u8   G;
+	u16  g_time;
+	u8   str[13];
+	u32  freq;
+};
+
+struct disp_info disp_info = {0};
 void disp_boot()
 {
 	init_1602(SYS_BUS_WIDE_8,
@@ -42,130 +52,41 @@ void disp_boot()
               SHIFT_CUROS_RIGHT,
 			  SHIFT_NOWITH_SUROS
 			);	
+	disp_info.S = 'W';
+	disp_info.G = 0;
+	disp_info.g_time = GRADE0_MEASURE_MS;
+	disp_info.freq = 0;
 	dispstr(boot_str);
 	delays(250);
 	disp_painting();
 }
 //  0:W  1:R  2:M
-//  0:'0' 1:'1' 2:'2'  3:'3'
+//  0:1000 1:'1' 2:'2'  3:'3'
 // 
-struct disp_info
-{
-	u8  S;
-	u8  G;
-	u8  str[14];
-	u32  freq;
-};
 
-struct disp_info disp_info = {0};
-
-void disp_up_freq(u32 freq)
+void disp_up_freq(u8 *str)
 {
-	u8 buf[9];
-	u8 i = 0;
-	u8 quo;
 	u8 k;
-	u8 get_1 = 0;
-
 	COMM_POS(0x44);
 	for(k = 0; k < 14; k++ )
 		dispch(" ");
-	freq %= 1000000000;                //9
-	quo = (u8)(freq / 100000000);      //8 
-	if( quo != 0 ){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 100000000;                 //8 
-	quo = (u8)(freq / 10000000);        //7
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 10000000;                  //7
-	quo = (u8)(freq / 1000000);         //6
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 1000000;
-	quo = (u8)(freq / 100000);
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 100000;
-	quo = (u8)(freq / 10000);
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 10000;
-	quo = (u8)(freq / 1000);
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 1000;
-	quo = (u8)(freq / 100);
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 100;
-	quo = (u8)(freq / 10);
-	if(get_1 == 1 || quo != 0){
-		buf[i++] = quo + '0';
-		get_1 = 1;
-	}
-	
-	freq %= 10;
-	if( quo != 0 ){
-		buf[i++] = quo + '0';
-	}
-
-	quo = i % 3;
-	get_1 = i / 3;
-
-	for(i = 0; i < quo ; i++){
-		disp_info.str[i] = buf[i];
-	}
-	disp_info.str[quo++] = '.';
-	
-	while(get_1--){
-		for(k = 0; k < 3 ; k++){
-			disp_info.str[quo++] = buf[i++];
-		}
-		disp_info.str[quo++] = '.';
-	}
-	quo--;
-	disp_info.str[quo++] = 'H';
-	disp_info.str[quo++] = 'z';
-	disp_info.str[quo] = '\0';
 	
 	COMM_POS(0x44);
-	dispstr(disp_info.str);
+	dispstr(str);
 }
 
-#define ASSERT()  do{\
-		if(assert())\
-			break;  \
-	    delay(time) \
-	    delay(time) \
-	    delay(time) \
-	    delay(time) \
-		}while(0)
-u8  wait_over( u8 (*assert)(void),u8 time)
+#define ASSERT()   while(1){\
+	               		res = assert(count); \
+					    if(res & 0x0F == OVER_COUNT )\
+							return (res & 0xF0) >> 4 ; \
+						else if(res & 0x0F  == OVER_1S)
+							break;
+					}
+
+u8  wait_over( u8 (*assert)(u32 count),u32 count)
 {
-	u8 i = 0;
-	while( !assert()){
+	u8 res = 0;
+	while(1)
 		COMM_POS(0x04);
 		disch('.');
 		ASSERT();
@@ -177,27 +98,45 @@ u8  wait_over( u8 (*assert)(void),u8 time)
 		dispstr("   ");
 		ASSERT();
 	}
+    return 0;
 }
-void enter_wait_status(u8 (*assert)(void))
+u8  enter_wait_status(u8 (*assert)(u32),u32 count)
 {
-    disp_info.S = 0;
+    u8 val;
+	disp_info.S = 'W';
 	COMM_DISP(DISP_SCREEN_EN);
 	COMM_POS(0x03);
 	dispch('W');
-	wait_over(assert,250);
-
+	while(1){
+	  val = wait_over(assert,count);
+	   if(val == VAL_MOD || val == VAL_START){
+	   	return val;
+	   }
+	}
 }
-void enter_Run_status( u8 (*assert)(void))
+
+void enter_Run_status(u8 (*assert)(u32),u32 count)
 {
-    disp_info.S = 1;
+    disp_info.S = 'R';
     COMM_DISP(DISP_SCREEN_EN);
 	COMM_POS(0x03);
 	dispch('R');
-	wait_over(assert,1);
+	wait_over(assert,count);
 }
-void  enter_mode( u8 (*assert)(void))
+/***************************/
+//
+//    assert:
+//        count --> no used
+//       return:
+//            VAL_MOD  | OVER_COUNT 
+//            VAL_UP   | OVER_COUNT 
+//            VAL_DOWN | OVER_COUNT 
+//            VAL_XX   | OVER_1S
+//            VAL_XX   | OVER_NO
+/***************************/
+void  enter_mode_status( u8 (*assert)(u32),u32 count)
 {
-    disp_info.S = 2;
+    disp_info.S = 'M';
     u8 key_val = 0;
    	COMM_DISP(DISP_SCREEN_EN);
 	COMM_POS(0x03);
@@ -205,24 +144,33 @@ void  enter_mode( u8 (*assert)(void))
     COMM_POS(0x09);
     COMM_DISP(DISP_SCREEN_EN | DISP_CUROS_EN | DISP_CUROS_GLITTER_EN);
     while(1){
-	   	key_val = assert(); 
-    	COMM_POS(0x09);
-		dispch('0' + disp_info.G);
-		if (ket_val==  KEY_MOD ){
+	   	key_val = wait_over(count); 
+		if (ket_val==  VAL_MOD ){
 			break;
 		}
-		if (key_val == KEY_UP){
+		if (key_val == VAL_UP){
 			disp_info.G++;
 			if(disp_info.G > 3){
 				disp_info.G = 0;
 			}			
 		}
-		if (key_val == KEY_DOWN){
+		if (key_val == VAL_DOWN){
 			if(disp_info.G == 0){
 				disp_info.G = 4 ;
 			}			
 			disp_info.G--;
 		}
+		if(disp_info.G == 0)
+			disp_info.g_time = GRADE0_MEASURE_MS;
+		else if(disp_info.G == 1)
+			disp_info.g_time = GRADE1_MEASURE_MS;
+		else if(disp_info.G == 2)
+			disp_info.g_time = GRADE2_MEASURE_MS;
+		else
+			disp_info.g_time = GRADE3_MEASURE_MS;
+    
+		COMM_POS(0x09);
+		dispch('0' + disp_info.G);
 	}	
    	COMM_DISP(DISP_SCREEN_EN);
 }
