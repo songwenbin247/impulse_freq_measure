@@ -18,6 +18,8 @@ void delays(u8 s)
 	u8 i = 0;
 	for(i = 0; i < s; i++){
 		delay(250);
+		delay(250);
+		delay(250);
 		delay(250);	
 	}
 }
