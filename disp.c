@@ -79,14 +79,14 @@ void disp_up_freq(u8 *str)
 	               		res = assert(count); \
 					    if(res & 0x0F == OVER_COUNT )\
 							return (res & 0xF0) >> 4 ; \
-						else if(res & 0x0F  == OVER_1S)
-							break;
+						else if(res & 0x0F  == OVER_1S) \
+							break; \
 					}
 
 u8  wait_over( u8 (*assert)(u32 count),u32 count)
 {
 	u8 res = 0;
-	while(1)
+	while(1){
 		COMM_POS(0x04);
 		disch('.');
 		ASSERT();
@@ -144,7 +144,7 @@ void  enter_mode_status( u8 (*assert)(u32),u32 count)
     COMM_POS(0x09);
     COMM_DISP(DISP_SCREEN_EN | DISP_CUROS_EN | DISP_CUROS_GLITTER_EN);
     while(1){
-	   	key_val = wait_over(count); 
+	   	key_val = wait_over(assert,count); 
 		if (ket_val==  VAL_MOD ){
 			break;
 		}
